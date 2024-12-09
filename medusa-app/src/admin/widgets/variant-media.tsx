@@ -36,7 +36,7 @@ const VariantMediaWidget = ({
 
     const fetchMedias = async () => {
       const response = await fetch(`/api/variant-medias/variant/${data.id}`);
-      const json = await response.json();
+      const json: ValidatedMedia[] = await response.json();
       setMedias(json.map((m: ValidatedMedia) => ({
         fileid: m.file_id,
         mimeType: m.mime_type,

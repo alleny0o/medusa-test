@@ -1,6 +1,5 @@
 import { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
-
 // GET all medias for a variant by variant id
 export const GET = async (
     req: AuthenticatedMedusaRequest,
@@ -35,3 +34,38 @@ export const GET = async (
         url: m.url,
     })) });
 }
+
+import deleteMediasWorkflow from "src/workflows/delete-medias";
+import { deleteFilesWorkflow } from "@medusajs/medusa/core-flows";
+
+// DELETE all medias and files for a variant by variant id
+export const DELETE = async (
+    req: AuthenticatedMedusaRequest,
+    res: MedusaResponse,
+) => {
+    const variantId  = req.params.id;
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY);
+
+    const { data: linkResults } = await query.graph({
+        entity: 'product_product_variant_mediamodule_media',
+        fields: ['media_id'],
+        filters: {
+            product_variant_id: variantId,
+        },
+    });
+
+    const mediaIds = linkResults.map((l) => l.media_id);
+
+    await deleteFilesWorkflow(req.scope).run({
+        input: {
+          ids: mediaIds,
+        },
+      });
+
+    await deleteMediasWorkflow(req.scope).run({
+        input: {
+            mediaIds,
+        },
+    });
+    res.json({ success: true });
+};

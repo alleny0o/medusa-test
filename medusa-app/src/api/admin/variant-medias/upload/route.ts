@@ -1,7 +1,8 @@
 import { AuthenticatedMedusaRequest, MedusaResponse  } from "@medusajs/framework/http";
-import { uploadFilesWorkflow } from "@medusajs/medusa/core-flows";
+import { uploadFilesWorkflow, deleteFilesWorkflow } from "@medusajs/medusa/core-flows";
 import { MedusaError } from "@medusajs/framework/utils";
 
+// Upload files
 export const POST = async (
     req: AuthenticatedMedusaRequest,
     res: MedusaResponse
@@ -27,4 +28,31 @@ export const POST = async (
     })
   
     res.status(200).json({ files: result })
-  }
+};
+
+// Delete files
+type DeleteRequestBody = {
+  fileIds: string[];
+};
+
+export const DELETE = async (
+  req: AuthenticatedMedusaRequest<DeleteRequestBody>,
+  res: MedusaResponse,
+) => {
+  const fileIds = req.body.fileIds;
+
+  if (!fileIds?.length) {
+    throw new MedusaError(
+      MedusaError.Types.INVALID_DATA,
+      "No file IDs provided for deletion"
+    );
+  };
+
+  await deleteFilesWorkflow(req.scope).run({
+    input: {
+      ids: fileIds,
+    },
+  });
+
+  res.status(200).json({ success: true });
+};

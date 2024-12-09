@@ -9,6 +9,7 @@ type CreateRequestBody = z.infer<
     typeof createMediasSchema
 >;
 
+// Create new medias
 export const POST = async (
     req: AuthenticatedMedusaRequest<CreateRequestBody>,
     res: MedusaResponse,
