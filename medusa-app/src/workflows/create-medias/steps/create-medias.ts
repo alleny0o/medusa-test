@@ -20,13 +20,10 @@ const createMediasStep = createStep(
         const mediaModuleService: MediaModuleService = container.resolve(MEDIA_MODULE);
         const createdMedias = await mediaModuleService.createMedia(medias);
 
-        // Ensure createdMedias is an array
-        const mediaArray = Array.isArray(createdMedias) ? createdMedias : [createdMedias];
-
         return new StepResponse({
-            medias: mediaArray,
+            medias: createdMedias,
         }, {
-            medias: mediaArray,
+            medias: createdMedias,
         });
     },
     async ({ medias }: any, { container }) => {

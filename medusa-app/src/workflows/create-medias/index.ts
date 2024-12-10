@@ -1,8 +1,6 @@
 import { createWorkflow, WorkflowResponse } from '@medusajs/framework/workflows-sdk';
-import { createRemoteLinkStep } from '@medusajs/medusa/core-flows';
 import createMediasStep, { CreateMediaInput } from './steps/create-medias';
-import { Modules } from '@medusajs/framework/utils';
-import { MEDIA_MODULE } from 'src/modules/media';
+import createRemoteLinkStep from './steps/create-link';
 
 type CreateMediasWorkflowInput = {
     medias: CreateMediaInput[];
@@ -16,20 +14,10 @@ const createMediasWorkflow = createWorkflow(
 
         const { medias: createdMedias } = createMediasStep({ medias });
 
-        // Ensure createdMedias is an array
-        const mediaArray = Array.isArray(createdMedias) ? createdMedias : [createdMedias];
-
-        createRemoteLinkStep([{
-            [Modules.PRODUCT]: {
-                product_variant_id: variantId,
-            },
-            [MEDIA_MODULE]: {
-                media_ids: mediaArray.map((media) => media.id),
-            }
-        }]);
+        createRemoteLinkStep({ medias: createdMedias, variantId });
 
         return new WorkflowResponse({
-            medias: mediaArray,
+            medias: createdMedias,
         });
     },
 )

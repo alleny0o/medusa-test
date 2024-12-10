@@ -4,9 +4,10 @@ import type { Media } from "../../widgets/variant-media";
 
 interface MediaProps {
   media: Media;
+  onDelete: (fileid: string) => void;
 }
 
-const Media = ({ media }: MediaProps) => {
+const Media = ({ media, onDelete }: MediaProps) => {
   return (
     <Container className="flex justify-between items-center bg-gray-50 p-2 gap-x-2">
       <div className="flex items-center space-x-2">
@@ -42,7 +43,7 @@ const Media = ({ media }: MediaProps) => {
                     Make thumbnail
                 </DropdownMenu.Item>
                 <DropdownMenu.Separator />
-                <DropdownMenu.Item className="gap-x-2">
+                <DropdownMenu.Item className="gap-x-2" onClick={() => onDelete(media.fileid)}>
                     <Trash className="text-ui-fg-subtle" />
                     Delete
                 </DropdownMenu.Item>
@@ -52,6 +53,7 @@ const Media = ({ media }: MediaProps) => {
             type="button"
             className="rounded-lg p-1.5 duration-150 transition-bg hover:bg-gray-100"
             aria-label={`Remove ${media.name}`}
+            onClick={() => onDelete(media.fileid)}
         >
             <XMark className="text-gray-500" />
         </button>

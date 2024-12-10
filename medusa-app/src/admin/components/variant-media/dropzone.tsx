@@ -1,13 +1,15 @@
+// Dropzone.tsx
+
 import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { ArrowDownTray } from "@medusajs/icons";
-import { Media as VariantMedia } from "../../widgets/variant-media";
+import { Media } from "../../widgets/variant-media";
 import { FileDTO } from "@medusajs/framework/types";
-import Media from "./media";
+import MediaItem from "./media";
 
 type DropzoneProps = {
-  medias: VariantMedia[];
-  setMedias: any;
+  medias: Media[];
+  setMedias: (medias: Media[]) => void;
 };
 
 function Dropzone({ medias, setMedias }: DropzoneProps) {
@@ -20,37 +22,51 @@ function Dropzone({ medias, setMedias }: DropzoneProps) {
         formData.append("files", file);
       });
 
-      const { files }: { files: FileDTO[] } = await fetch(
-        "/admin/variant-medias/upload",
-        {
+      try {
+        const response = await fetch("/admin/variant-medias/upload", {
           method: "POST",
           credentials: "include",
           body: formData,
-        }
-      ).then((res) => res.json());
+        });
 
-      const newFiles: VariantMedia[] = acceptedFiles.map(
-        (file: File, index: number) => {
+        if (!response.ok) {
+          throw new Error('Failed to upload files.');
+        }
+
+        const { files }: { files: FileDTO[] } = await response.json();
+
+        // Validate that each file has a valid 'id' and 'url'
+        const newFiles: Media[] = files.map((file, index) => {
+          if (!file.id || !file.url) {
+            console.warn(`File at index ${index} is missing 'id' or 'url'. Skipping.`);
+            return null;
+          }
           return {
-            fileid: files[index]?.id,
-            name: file.name,
-            size: file.size,
-            mimeType: file.type,
+            fileid: file.id,
+            name: acceptedFiles[index].name,
+            size: acceptedFiles[index].size,
+            mimeType: acceptedFiles[index].type,
             isThumbnail: false,
-            url: files[index]?.url || "",
+            url: file.url,
           };
-        }
-      );
+        }).filter((file): file is Media => file !== null);
 
-      setMedias((currentMedias: VariantMedia[]) => [
-        ...currentMedias,
-        ...newFiles,
-      ]);
+        // Append new media to existing medias
+        setMedias([...medias, ...newFiles]);
+      } catch (error) {
+        console.error(error);
+        // Optionally, display an error message to the user
+      }
     },
-    [setMedias]
+    [medias, setMedias]
   );
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
+
+  const handleDelete = (fileid: string) => {
+    const updatedMedias = medias.filter((media) => media.fileid !== fileid);
+    setMedias(updatedMedias);
+  }
 
   return (
     <>
@@ -72,8 +88,8 @@ function Dropzone({ medias, setMedias }: DropzoneProps) {
         </div>
       </div>
       <div className="w-full mt-1 space-y-3">
-        {medias.map((media: VariantMedia) => (
-          <Media key={media.fileid} media={media} />
+        {medias.map((media: Media) => (
+          <MediaItem key={media.fileid} media={media} onDelete={handleDelete} />
         ))}
       </div>
     </>

@@ -7,5 +7,5 @@ export default defineLink(
     {
         linkable: MediaModule.linkable.media,
         isList: true,
-    }
+    },
 );
